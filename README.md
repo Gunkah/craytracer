@@ -1,5 +1,4 @@
-# raytrace
-craytracer
+# craytracer
 
 A simple ray tracer written in c. 
 Eventually it will take in parameters from a text file like resolution, camera position, fov and a list of shapes/triangles with color info then create a ppm image file from that info.
