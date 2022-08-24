@@ -150,7 +150,7 @@ int main(){
             //printf("trace: %f, %f, %f\n", traceme.x, traceme.y, traceme.z);
             //get color
             color c = getColor(camPos, traceme, spheres, lights, scount, lcount);
-            fprintf(fp, "%d %d %d\n", (int)c.r, (int)c.b, (int)c.g);
+            fprintf(fp, "%f %f %f\n", c.r, c.b, c.g);
             //set target to next pixel in row
             movePoint(&targetTemp, hIncr, 1);
         }
