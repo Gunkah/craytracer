@@ -57,6 +57,7 @@ color getColor(point o, vector v, sphere s[], light l[], int scount, int lcount)
 color getLighting(point s, vector n, light l);
 float dotProd(vector a, vector b);
 float checkSphere(point origin, vector dir, sphere s);
+float distBetweenPoints(point a, point b);
 
 int main(){
     //TODO get fill in these values from file
@@ -201,12 +202,12 @@ color getColor(point o, vector v, sphere sp[], light l[], int scount, int lcount
     int nearest = -1;  //index of nearest intersection
     float dist = -1; //distance of that intersection
     for(int i = 0; i < scount; i++){
-       float closest = checkSphere(o, v, sp[i]);
-       //printf("t: %f\n", closest);
-       if(closest>=0){
-           if(dist<0||closest<dist){
+       float distToSphere = checkSphere(o, v, sp[i]);
+       //printf("t: %f\n", distToSphere);
+       if(distToSphere>=0){
+           if(dist<0||distToSphere<dist){
                nearest = i;
-               dist = closest;
+               dist = distToSphere;
            }
        }
     }
@@ -218,14 +219,30 @@ color getColor(point o, vector v, sphere sp[], light l[], int scount, int lcount
 
             //vectors to compare
             vector normal = normalizeVector(vectorTo(sp[nearest].pos, s));
+            float distToLight = distBetweenPoints(s, l[i].pos);
             vector toLight = normalizeVector(vectorTo(s, l[i].pos));
-            //cosine of angle between the vectors will give the light intensity
-            float pow = dotProd(normal, toLight);
-            if(pow>0){
-                c.r += (sp[nearest].color.r * pow * l[i].power.r);
-                c.g += (sp[nearest].color.g * pow * l[i].power.g);
-                c.b += (sp[nearest].color.b * pow * l[i].power.b);
-                printf("Color updated: %f %f %f\n", c.r, c.g, c.b);
+            bool blocked = false;
+
+            //check for objects in the way
+            for(int j = 0; j < scount; j++;){
+                if(j == nearest){}//skip itself
+                else{
+                    float distToSphere = checkSphere(s, toLight, sp[j]);
+                    if(distToSphere>=0&&distToSphere<distToLight){
+                        blocked = true;
+                        break;
+                    }
+                }
+            }
+            if(!blocked){
+                //cosine of angle between the vectors will give the light intensity
+                float pow = dotProd(normal, toLight);
+                if(pow>0){
+                    c.r += (sp[nearest].color.r * pow * l[i].power.r);
+                    c.g += (sp[nearest].color.g * pow * l[i].power.g);
+                    c.b += (sp[nearest].color.b * pow * l[i].power.b);
+                    printf("Color updated: %f %f %f\n", c.r, c.g, c.b);
+                }
             }
         }
     }
@@ -270,7 +287,7 @@ color getColor(point o, vector v, sphere sp[], light l[], int scount, int lcount
     return c;
 }
 
-//Checks to see if line intersects with sphere
+//Checks to see if line intersects with sphere, returns the distance from the origin to first intersection
 float checkSphere(point origin, vector dir, sphere s){
     /*
     (origin.x + dir.x * t - s.x)^2 +
@@ -289,7 +306,8 @@ float checkSphere(point origin, vector dir, sphere s){
     //check discriminant
     float d = b*b - 4*a*c;
     float t = -1;
-    //2 solutions
+
+    //if 2 solutions
     if(d>0){
         
         float t1 = (-b+sqrt(d))/(2*a);
@@ -309,7 +327,7 @@ float checkSphere(point origin, vector dir, sphere s){
             t = t2;
         }
     }
-    //1 solution
+    //if 1 solution
     else if(d==0){
         float t1 = (b*b)/(2*a);
         if( t1 >= 0){
@@ -321,4 +339,8 @@ float checkSphere(point origin, vector dir, sphere s){
 
 float dotProd(vector a, vector b){
     return a.x*b.x + a.y*b.y + a.z*b.z;
+}
+
+float distBetweenPoints(point a, point b){
+    float d = sqrt((b.x - a.x)*(b.x - a.x) + (b.y - a.y)*(b.y - a.y) + (b.z - a.z)*(b.z - a.z));
 }
