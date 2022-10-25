@@ -99,17 +99,17 @@ int main(){
     point bl = {-windowHWidth, -windowHHeight, viewDist};
 
     //array holding the shapes in the scene
-    int scount = 3;
+    int scount = 4;
     sphere sp = {{0, 0, 8}, 2, {255, 255, 255}};
     sphere sp2 = {{-3, -3, 7}, 1, {255, 255, 0}};
     sphere sp3 = {{-6, 3, 6}, 1, {255, 0, 255}};
-    sphere spheres[3] = {sp, sp2, sp3};
+    sphere sp4 = {{-4, 0, 7}, 0.5, {255, 255, 255}};
+    sphere spheres[] = {sp, sp2, sp3, sp4};
 
     //array holding lights
-    int lcount = 2;
-    light l = {{-5, 3, 3}, {1, 1, 1}};
-    light l2 = {{4, 3, 4}, {1, 1, 0}};
-    light lights[] = {l, l2};
+    int lcount = 1;
+    light l = {{-10, 0, 8}, {1, 1, 1}};
+    light lights[] = {l};
 
     printf("%f, %f, %f, %f\n", sp.pos.x, sp.pos.y, sp.pos.z, sp.r);
     //create ppm file
@@ -219,68 +219,79 @@ color getColor(point o, vector v, sphere sp[], light l[], int scount, int lcount
 
             //vectors to compare
             vector normal = normalizeVector(vectorTo(sp[nearest].pos, s));
+            point lp;
+            lp.x = l[i].pos.x;
+            lp.y = l[i].pos.y;
+            lp.z = l[i].pos.z;
             float distToLight = distBetweenPoints(s, l[i].pos);
             vector toLight = normalizeVector(vectorTo(s, l[i].pos));
-            bool blocked = false;
+            int blocked = 0;
 
             //check for objects in the way
-            for(int j = 0; j < scount; j++;){
+            for(int j = 0; j < scount; j++){
                 if(j == nearest){}//skip itself
                 else{
                     float distToSphere = checkSphere(s, toLight, sp[j]);
+                    
+                    //printf("checking point: %f %f %f, vector: %f %f %f\n", s.x, s.y, s.z, toLight.x, toLight.y, toLight.z);
                     if(distToSphere>=0&&distToSphere<distToLight){
-                        blocked = true;
+                        printf("%f %f\n", distToSphere, distToLight);
+                        blocked = 1;
+                        printf("%f %f %f blocked by sphere %d\n", s.x, s.y, s.z, j);
                         break;
                     }
                 }
             }
-            if(!blocked){
+            if(blocked==0){
                 //cosine of angle between the vectors will give the light intensity
                 float pow = dotProd(normal, toLight);
                 if(pow>0){
                     c.r += (sp[nearest].color.r * pow * l[i].power.r);
                     c.g += (sp[nearest].color.g * pow * l[i].power.g);
                     c.b += (sp[nearest].color.b * pow * l[i].power.b);
-                    printf("Color updated: %f %f %f\n", c.r, c.g, c.b);
+                    //printf("Color updated: %f %f %f\n", c.r, c.g, c.b);
                 }
+            }
+            else{
+                c.r = 255;
             }
         }
     }
     //clamp colors
     if(c.r>=c.b&&c.r>=c.g){
         if(c.r>255){
-            printf("Clamping: %f %f %f to ", c.r, c.g, c.b);
+            //printf("Clamping: %f %f %f to ", c.r, c.g, c.b);
             c.b /= c.r;
             c.g /= c.r;
             c.r /= c.r;
             c.b *= 255;
             c.g *= 255;
             c.r *= 255;
-            printf("%f %f %f\n", c.r, c.g, c.b);
+            //printf("%f %f %f\n", c.r, c.g, c.b);
         }
     }
     else if(c.b>=c.r&&c.b>=c.g){
         if(c.b>255){
-            printf("Clamping: %f %f %f to ", c.r, c.g, c.b);
+            //printf("Clamping: %f %f %f to ", c.r, c.g, c.b);
             c.r /= c.b;
             c.g /= c.b;
             c.b /= c.b;
             c.b *= 255;
             c.g *= 255;
             c.r *= 255;
-            printf("%f %f %f\n", c.r, c.g, c.b);
+            //printf("%f %f %f\n", c.r, c.g, c.b);
         }
     }
     else if(c.g>=c.r&&c.g>=c.b){
         if(c.g>255){
-            printf("Clamping: %f %f %f to ", c.r, c.g, c.b);
+            //printf("Clamping: %f %f %f to ", c.r, c.g, c.b);
             c.r /= c.g;
             c.b /= c.g;
             c.g /= c.g;
             c.b *= 255;
             c.g *= 255;
             c.r *= 255;
-            printf("%f %f %f\n", c.r, c.g, c.b);
+            //printf("%f %f %f\n", c.r, c.g, c.b);
         }
     }
     
@@ -343,4 +354,5 @@ float dotProd(vector a, vector b){
 
 float distBetweenPoints(point a, point b){
     float d = sqrt((b.x - a.x)*(b.x - a.x) + (b.y - a.y)*(b.y - a.y) + (b.z - a.z)*(b.z - a.z));
+    return d;
 }
